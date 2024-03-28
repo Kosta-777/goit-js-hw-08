@@ -64,41 +64,51 @@ const images = [
   },
 ];
 
-const galleryList = document.querySelector('ul.gallery');
-function createGalleryList(array) {
-  return array
-    .map(
-      ({ preview, original, description }) =>
-        `<li class="gallery-item">
-                <a class="gallery-link" href="${preview}">
-                <img
-                class="gallery-image"
-                src="${preview}"
-                data-source="${original}"
-                alt="${description}"
-                />
-            </a>
-        </li>`
-    )
-    .join('');
-}
+const galleryList = document.querySelector('.gallery');
 
-galleryList.insertAdjacentHTML('beforeend', createGalleryList(images));
-galleryList.addEventListener('click', handleClick);
+galleryList.addEventListener('click', showLargeImg);
 
-function handleClick(event) {
+function showLargeImg(event) {
   event.preventDefault();
-  const target = event.target;
   if (event.target.nodeName !== 'IMG') {
     return;
   }
-  const largeImage = target.dataset.source;
-  openModal(largeImage);
-}
 
-function openModal(largeImage) {
-  const instance = basicLightbox.create(`
-    <img class="large-img" src="${largeImage}" alt="${images.description}" width="1280">
-`);
+ instance = basicLightbox.create(
+    `<img src="${event.target.getAttribute(
+      'data-source'
+    )}" width="800" height="600">`,
+    {
+      onShow: () => {
+        document.addEventListener('keydown', handleEscapeKeyPress);
+      },
+      onClose: () => {
+        document.removeEventListener('keydown', handleEscapeKeyPress);
+      },
+    }
+  );
   instance.show();
 }
+
+function handleEscapeKeyPress(event) {
+  if (event.code === 'Escape') {
+    instance.close();
+  }
+}
+
+const galleryImagesHTML = images
+  .map(({ preview, original, description }) => {
+    return `<li class="gallery-item">
+      <a class="gallery-link" href="${original}">
+        <img
+          class="gallery-image"
+          src="${preview}"
+          data-source="${original}"
+          alt="${description}"
+        />
+      </a>
+    </li>`;
+  })
+  .join('');
+
+galleryList.innerHTML = galleryImagesHTML;
